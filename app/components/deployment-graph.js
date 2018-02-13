@@ -39,7 +39,8 @@ export default Component.extend({
         .attr('transform', function(d) { return 'translate(' + d.x + ',' + d.y + ')'; })
         .attr('r', function(d) { return d.r; })
         .attr('class', function(d) { return d.className; })
-        .attr("fill",function(d,i){return color(i);});
+        .attr("fill",function(d,i){return color(i);})
+        .on('click', (d) => this.get("circleClicked")(d.name));
 
         vis.enter().append("text")
         .attr("x", function(d){ return d.x; })

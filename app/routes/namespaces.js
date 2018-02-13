@@ -25,10 +25,8 @@ export default Route.extend({
 ajax: Ember.inject.service(),
 model(params) {
 
-    return Ember.RSVP.hash({
-        "deployments": this.get('ajax').request("http://127.0.0.1:8080/apis/apps/v1/namespaces/" + params.namespace_id + "/deployments/"),
-        "namespaces": this.get('ajax').request("http://127.0.0.1:8080/api/v1/namespaces")
-    });
+    return this.get('ajax').request("http://127.0.0.1:8080/apis/apps/v1/namespaces/" + params.namespace_id + "/deployments/");
+
 
 }
 

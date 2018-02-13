@@ -2,12 +2,12 @@
 {{outlet}}
 <p>{{model.kind}}</p>
 <ul>
-  {{#each model.deployments.items as |pod|}}
+  {{#each model.items as |pod|}}
     <li>{{pod.metadata.name}}</li>
   {{/each}}
 </ul>
 
-{{#each model.namespaces.items as |namespace|}}
-{{#link-to "namespaces" namespace.name}}{{namespace.name}}{{/link-to}}
-{{/each}}
-{{deployment-graph data=model.deployments}}
+{{deployment-graph data=model circleClicked=(action "showInfo")}}
+{{#if infoShown}}
+{{info-box data=infoInfos}}
+{{/if}}
