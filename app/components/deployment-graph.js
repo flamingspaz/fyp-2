@@ -4,7 +4,8 @@ export default Component.extend({
     didRender() {
         var data = this.get('data');
         //this.$('#graph').innerHTML = "";
-
+        var networkpolicies = this.get('networkpolicies');
+        console.log(networkpolicies.items);
         var diameter = 600;
 
         var svg = d3.select('#graph').append('svg')
@@ -30,8 +31,28 @@ export default Component.extend({
         // generate data with calculated layout values
         var nodes = bubble.nodes(processData(finaldata.deployments))
         .filter(function(d) { return !d.children; }); // filter out the outer bubble
-        var plinks = [{source: nodes[1], target: nodes[2]}];
-
+        //var plinks = [{source: nodes[1], target: nodes[2]}, {source: nodes[0], target: nodes[2]}];
+        var plinks = []
+        networkpolicies.items.forEach(policy => {
+            var source_selector = policy.spec.podSelector.matchLabels
+            var target_selector = policy.spec.ingress[0].from[0].podSelector.matchLabels
+            var source_indexes = []
+            var target_indexes = []
+            for (var label in source_selector) {
+                var value = source_selector[label]
+                source_indexes = source_indexes.concat(data.items.filter(d => d.metadata.labels[label] == value).map((_, index) => index))
+            }
+            for (var label in target_selector) {
+                var value = target_selector[label]
+                target_indexes = target_indexes.concat(data.items.filter(d => d.metadata.labels[label] = value).map((_, index) => index))
+            }
+            source_indexes.forEach(source_index => {
+                target_indexes.forEach(target_index => {
+                    plinks.push({source: nodes[source_index], target: nodes[target_index]})
+                })
+            })
+            console.log(plinks)
+        });
         var vis = svg.selectAll('circle')
         .data(nodes);
 
