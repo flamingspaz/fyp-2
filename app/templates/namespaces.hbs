@@ -1,12 +1,5 @@
 <h2>Explore</h2>
 {{outlet}}
-<p>{{model.kind}}</p>
-<ul>
-  {{#each model.items as |pod|}}
-    <li>{{pod.metadata.name}}</li>
-  {{/each}}
-</ul>
-
 {{deployment-graph data=model circleClicked=(action "showInfo")}}
 {{#if infoShown}}
 {{info-box data=infoInfos}}

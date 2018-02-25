@@ -1,1 +1,31 @@
-Availible replicas: {{data.status.availableReplicas}}
+<div class="info-box">
+<h3>{{data.metadata.name}}</h3>
+<!--
+<p>
+    {{#each data.spec.template.metadata.labels}}
+        {{key}}:{{this}}
+    {{/each}}
+</p>
+-->
+<div class="info-box-details">
+{{data.status.readyReplicas}}/{{data.status.replicas}} Ready
+</div>
+<div class="specdetails">
+    {{#each data.spec.template.spec.containers as |container|}}
+<p>        {{container.image}} | <a href="https://hub.docker.com/search/?isAutomated=0&isOfficial=0&page=1&pullCount=0&q={{container.image}}&starCount=0">Docker Hub</a>
+        {{#each container.ports as |port|}}
+            {{port.protocol}}:{{port.containerPort}}
+        {{/each}}
+        {{#each container.env as |env|}}
+            {{env.name}}: {{env.value}}
+        {{/each}}</p>
+    {{/each}}
+</div>
+<h4>Logs</h4>
+{{#each data.status.conditions as |log|}}
+<div>
+    <p>{{log.type}} - {{log.lastUpdateTime}}</p>
+    <p>{{log.message}}</p>
+</div>
+{{/each}}
+</div>
