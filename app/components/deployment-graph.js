@@ -17,42 +17,22 @@ export default Component.extend({
         .value(function(d) {return d.size;})
         .padding(3);
 
-        var finaldata = { "deployments": {}};
+        var finaldata = {"children": []};
         data.items.forEach(function(item) {
             var tmpdata = {
                 "name": item.metadata.name,
-                "size": item.spec.replicas
+                "size": item.spec.replicas,
+                "value": item.spec.replicas,
+                "k8sLabels": item.metadata.labels
             };
-            finaldata.deployments[item.metadata.name] = item.spec.replicas;
+            finaldata.children.push(tmpdata)
         });
-        //console.log(finaldata);
 
         var color = d3.scale.category20();
         // generate data with calculated layout values
-        var nodes = bubble.nodes(processData(finaldata.deployments))
+        var nodes = bubble.nodes(finaldata)
         .filter(function(d) { return !d.children; }); // filter out the outer bubble
-        //var plinks = [{source: nodes[1], target: nodes[2]}, {source: nodes[0], target: nodes[2]}];
-        var plinks = []
-        networkpolicies.items.forEach(policy => {
-            var source_selector = policy.spec.podSelector.matchLabels
-            var target_selector = policy.spec.ingress[0].from[0].podSelector.matchLabels
-            var source_indexes = []
-            var target_indexes = []
-            for (var label in source_selector) {
-                var value = source_selector[label]
-                source_indexes = source_indexes.concat(data.items.filter(d => d.metadata.labels[label] == value).map((_, index) => index))
-            }
-            for (var label in target_selector) {
-                var value = target_selector[label]
-                target_indexes = target_indexes.concat(data.items.filter(d => d.metadata.labels[label] = value).map((_, index) => index))
-            }
-            source_indexes.forEach(source_index => {
-                target_indexes.forEach(target_index => {
-                    plinks.push({source: nodes[source_index], target: nodes[target_index]})
-                })
-            })
-            console.log(plinks)
-        });
+
         var vis = svg.selectAll('circle')
         .data(nodes);
 
@@ -75,7 +55,47 @@ export default Component.extend({
         });
 
 
-            var links = svg.selectAll("line.node")
+        //var plinks = [{source: nodes[1], target: nodes[2]}, {source: nodes[0], target: nodes[2]}];
+            var plinks = []
+        networkpolicies.items.forEach(policy => {
+            var source_indexes = []
+            var target_indexes = []
+            var source_selector = policy.spec.podSelector.matchLabels
+            var target_selector = policy.spec.ingress[0].from[0].podSelector.matchLabels
+            // find the source node for the networkpolicy
+            for (var label in source_selector) {
+                var value = source_selector[label]
+                console.log(value)
+                console.log(label + ":" + source_selector[label])
+                console.log("nodes")
+                var matchedSources = []
+                for (var i = 0; i < nodes.length; i++) {
+                    if (nodes[i].k8sLabels[label] === value) {
+                        matchedSources.push(i)
+                    }
+                }
+                source_indexes = source_indexes.concat(matchedSources)
+            }
+            console.log(source_indexes)
+            // find the target node for the networkpolicy
+            for (var label in target_selector) {
+                var value = target_selector[label]
+                var matchedTargets = []
+                for (var i = 0; i < nodes.length; i++) {
+                    if (nodes[i].k8sLabels[label] === value) {
+                        matchedTargets.push(i)
+                    }
+                }
+                target_indexes = target_indexes.concat(matchedTargets)
+            }
+            console.log(source_indexes)
+            source_indexes.forEach(source_index => {
+                target_indexes.forEach(target_index => {
+                    plinks.push({source: nodes[source_index], target: nodes[target_index]})
+                })
+            })
+            console.log(plinks)
+            svg.selectAll("line.node")
                 .data(plinks)
                 .enter()
                 .append("line")
@@ -84,25 +104,11 @@ export default Component.extend({
                 .attr("x2", function(d) { return d.target.x; })
                 .attr("y2", function(d) { return d.target.y; })
                 .attr("class", "node")
-                .style("stroke", "#000")
+                .style("stroke",'#'+(Math.random()*0xFFFFFF<<0).toString(16))
                 .style("stroke-width", 5);
-
-        function processData(data) {
-            var obj = data;
-
-            var newDataSet = [];
-
-            for(var prop in obj) {
-                newDataSet.push({name: prop, className: prop.toLowerCase(), size: obj[prop]});
-            }
-            return {children: newDataSet};
-        }
-        //d3.json("http://127.0.0.1:8080/apis/apps/v1/namespaces/default/deployments/", function(data) {
-
-        //});
+        });
     },
     didUpdate() {
-        console.log('ayyy');
         d3.select('svg').remove();
     }
 });
