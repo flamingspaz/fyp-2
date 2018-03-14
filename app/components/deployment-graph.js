@@ -23,8 +23,10 @@ export default Component.extend({
                 "name": item.metadata.name,
                 "size": item.spec.replicas,
                 "value": item.spec.replicas,
-                "k8sLabels": item.metadata.labels
+                "k8sLabels": item.metadata.labels,
+                "raw": item
             };
+
             finaldata.children.push(tmpdata)
         });
 
@@ -49,12 +51,10 @@ export default Component.extend({
         .attr("text-anchor", "middle")
         .text(function(d){ return d['name']; })
         .style({
-            "fill":"white",
+            "fill":"black",
             "font-family":"Helvetica Neue, Helvetica, Arial, san-serif",
             "font-size": "15px"
         });
-
-
         //var plinks = [{source: nodes[1], target: nodes[2]}, {source: nodes[0], target: nodes[2]}];
             var plinks = []
         networkpolicies.items.forEach(policy => {
@@ -65,9 +65,6 @@ export default Component.extend({
             // find the source node for the networkpolicy
             for (var label in source_selector) {
                 var value = source_selector[label]
-                console.log(value)
-                console.log(label + ":" + source_selector[label])
-                console.log("nodes")
                 var matchedSources = []
                 for (var i = 0; i < nodes.length; i++) {
                     if (nodes[i].k8sLabels[label] === value) {
@@ -76,7 +73,6 @@ export default Component.extend({
                 }
                 source_indexes = source_indexes.concat(matchedSources)
             }
-            console.log(source_indexes)
             // find the target node for the networkpolicy
             for (var label in target_selector) {
                 var value = target_selector[label]
@@ -84,9 +80,17 @@ export default Component.extend({
                 for (var i = 0; i < nodes.length; i++) {
                     if (nodes[i].k8sLabels[label] === value) {
                         matchedTargets.push(i)
+                            if (nodes[i].raw.spec.template.spec.containers[0].hasOwnProperty("ports")) {
+                                var containerPort = nodes[i].raw.spec.template.spec.containers[0].ports[0].containerPort
+                            }
+                        var policyPort = policy.spec.ingress[0].ports[0].port
+                        if (containerPort != policyPort) {
+                            //console.log("NetworkPolicy " + policy.metadata.name + " applies to deployment " + nodes[i].raw.metadata.name + ", but " + policy.spec.ingress[0].ports[0].protocol + policyPort + " is not exposed from the container")
+                        }
                     }
                 }
                 target_indexes = target_indexes.concat(matchedTargets)
+
             }
             console.log(source_indexes)
             source_indexes.forEach(source_index => {

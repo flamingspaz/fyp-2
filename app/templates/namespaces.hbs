@@ -3,5 +3,5 @@
 
 {{deployment-graph data=model.namespace circleClicked=(action "showInfo") networkpolicies=model.networkpolicies}}
 {{#if infoShown}}
-{{info-box data=infoInfos}}
+{{info-box data=infoInfos networkpolicies=model.networkpolicies alerts=alerts}}
 {{/if}}
